@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# /usr/local/bin/lrep
+# lrep: Manage a local Debian repository
+
+# Load functions
+source /usr/local/lib/lrep_functions.sh
+
+# Ensure required commands are available
+check_requirements
+
+# Main script logic
+if [ $# -lt 1 ]; then
+    echo "Error: No command specified."
+    echo "Use 'lrep help' for usage information."
+    exit 1
+fi
+
+CMD="$1"
+shift
+
+case "$CMD" in
+    add)
+        if [ $# -lt 1 ]; then
+            echo "Error: No Debian package specified for addition."
+            exit 1
+        fi
+        DEB_FILE="$1"
+        add_to_local_repo "$DEB_FILE"
+        ;;
+    remove)
+        if [ $# -lt 1 ]; then
+            echo "Error: No Debian package specified for removal."
+            exit 1
+        fi
+        DEB_FILE="$1"
+        remove_from_local_repo "$DEB_FILE"
+        ;;
+    list)
+        list_local_repo
+        ;;
+    update)
+        update_local_repo
+        ;;
+    help|-h|--help)
+        display_help
+        ;;
+    *)
+        echo "Unknown command: $CMD"
+        echo "Use 'lrep help' for usage information."
+        exit 1
+        ;;
+esac

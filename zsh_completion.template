@@ -1,0 +1,55 @@
+#compdef lrep
+
+_lrep() {
+    local -a commands
+    commands=(
+        'add:Add a .deb package to the local repository'
+        'remove:Remove a package from the local repository'
+        'list:List all packages in the local repository'
+        'update:Update the local repository metadata'
+        'help:Display help message'
+    )
+
+    # Configuration variables (inserted during package build)
+    LOCAL_REPO_DIR="${LOCAL_REPO_DIR}"
+    COMPONENT="${COMPONENT}"
+
+    # Enable extended globbing locally
+    setopt local_options extended_glob
+
+    local curcontext="$curcontext" state line expl
+    typeset -A opt_args
+
+    _arguments -C \
+        '1:command:->command' \
+        '*::arguments:->args'
+
+    case $state in
+        command)
+            _describe -t commands 'lrep commands' commands
+            ;;
+        args)
+            case "${words[1]}" in
+                remove)
+                    # Suggest package names from the local repository
+                    local repo_dir="${LOCAL_REPO_DIR}/pool/${COMPONENT}"
+                    if [ -d "$repo_dir" ]; then
+                        local -a packages
+                        packages=( "$repo_dir"/*.deb(N) )
+                        packages=( "${packages[@]##*/}" )
+                        _wanted packages expl 'packages' compadd -a packages
+                    fi
+                    ;;
+                add)
+                    # Suggest .deb files in the current directory
+                    _path_files -g '*.deb'
+                    ;;
+                *)
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+# Register the completion function
+compdef _lrep lrep

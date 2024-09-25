@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# build-lrep-package: script that builds a deb package of the lrep tool
+
+set -e  # Exit immediately on error
+
+# Variables
+GIT_REPO="jpasquier/lrep"
+BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/build-lrep-package.XXXXXXXX")
+OUTPUT_DIR=$(pwd)
+
+# Clean up temp directory on script exit
+trap 'rm -rf "$BUILD_DIR"' EXIT
+
+# Ensure necessary tools are installed
+for cmd in git fakeroot dpkg-deb envsubst; do
+    command -v $cmd >/dev/null 2>&1 || \
+      { echo >&2 "$cmd is required but not installed. Aborting."; exit 1; }
+done
+
+# Clone the repo to the build directory
+git clone "https://github.com/$GIT_REPO" "$BUILD_DIR"
+
+# Generate version information
+cd "$BUILD_DIR"
+#VERSION=$(git describe --tags --always)
+VERSION="$(date +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)"
+
+# Define destination directories
+PKG_DIR="$BUILD_DIR/pkg"
+DEB_DIR="$BUILD_DIR/deb"
+
+# Create necessary directories in the package structure
+mkdir -p "$PKG_DIR/etc"
+mkdir -p "$PKG_DIR/etc/bash_completion.d"
+mkdir -p "$PKG_DIR/usr/local/bin"
+mkdir -p "$PKG_DIR/usr/local/lib"
+mkdir -p "$PKG_DIR/usr/share/zsh/vendor-completions"
+mkdir -p "$PKG_DIR/DEBIAN"
+mkdir -p "$DEB_DIR"
+
+# Copy files to the target directories
+cp "$BUILD_DIR/lrep.conf" "$PKG_DIR/etc/"
+cp "$BUILD_DIR/bash_completion.sh" "$PKG_DIR/etc/bash_completion.d/lrep"
+cp "$BUILD_DIR/lrep" "$PKG_DIR/usr/local/bin/"
+cp "$BUILD_DIR/lrep_functions.sh" "$PKG_DIR/usr/local/lib/"
+cp "$BUILD_DIR/postinst" "$PKG_DIR/DEBIAN/"
+
+# Read variables from lrep.conf and export them
+set -a  # Automatically export all variables
+source "$BUILD_DIR/lrep.conf"
+set +a  # Disable automatic exporting
+
+# Generate the Zsh completion script using envsubst
+envsubst '${LOCAL_REPO_DIR},${COMPONENT}' < "$BUILD_DIR/zsh_completion.template" \
+    > "$PKG_DIR/usr/share/zsh/vendor-completions/_lrep"
+
+# Generate the postrm script using envsubst
+envsubst < "$BUILD_DIR/postrm.template" > "$PKG_DIR/DEBIAN/postrm"
+
+# Ensure that scripts have the correct permissions
+chmod 644 "$PKG_DIR/etc/bash_completion.d/lrep"
+chmod 755 "$PKG_DIR/usr/local/bin/lrep"
+chmod 644 "$PKG_DIR/usr/local/lib/lrep_functions.sh"
+chmod 644 "$PKG_DIR/usr/share/zsh/vendor-completions/_lrep"
+chmod 755 "$PKG_DIR/DEBIAN/postinst"
+chmod 755 "$PKG_DIR/DEBIAN/postrm"
+
+# Add the control file
+cat >"$PKG_DIR/DEBIAN/control" <<EOL
+Package: lrep
+Version: $VERSION
+Section: admin
+Priority: optional
+Architecture: all
+Depends: apt-utils, dpkg-dev, gpg
+Suggests: zsh
+Maintainer: Jérôme Pasquier
+Description: Manage a local repository of Debian packages
+Homepage: https://github.com/$GIT_REPO
+EOL
+
+# Build the package using fakeroot
+fakeroot dpkg-deb --build "$PKG_DIR" "$DEB_DIR"
+
+# Avoid deleting empty system folders after removal
+DEB_FILE=($DEB_DIR/*.deb)
+ar x --output "$BUILD_DIR" "$DEB_FILE" data.tar.xz
+unxz "$BUILD_DIR/data.tar.xz"
+tar --delete --occurrence -f "$BUILD_DIR/data.tar" ./etc/
+tar --delete --occurrence -f "$BUILD_DIR/data.tar" ./etc/bash_completion.d/
+tar --delete --occurrence -f "$BUILD_DIR/data.tar" ./usr/local/bin/
+tar --delete --occurrence -f "$BUILD_DIR/data.tar" ./usr/local/lib/
+tar --delete --occurrence -f "$BUILD_DIR/data.tar" ./usr/share/zsh/vendor-completions/
+xz "$BUILD_DIR/data.tar"
+ar r "$DEB_FILE" "$BUILD_DIR/data.tar.xz"
+
+# Move the generated .deb package to the initial directory
+mv "$DEB_DIR"/*.deb "$OUTPUT_DIR"/
+
+echo "Package built successfully: $(ls "$OUTPUT_DIR"/*.deb)"

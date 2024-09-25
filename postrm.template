@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e  # Exit immediately on error
+
+# Configuration variables (inserted during package build)
+LOCAL_REPO_DIR="${LOCAL_REPO_DIR}"
+APT_SOURCES_LIST="${APT_SOURCES_LIST}"
+DATA_DIR="${DATA_DIR}"
+PUBLIC_KEY_FILE="${PUBLIC_KEY_FILE}"
+LOG_FILE="${LOG_FILE}"
+
+# Logging function
+log() {
+    message="$1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $message" >> "$LOG_FILE"
+}
+
+if [ "$1" = "purge" ];  then
+    echo "Purging local repository data..."
+    log "Purging local repository data."
+
+    rm -rf "$LOCAL_REPO_DIR" "$DATA_DIR" "$APT_SOURCES_LIST" "$PUBLIC_KEY_FILE"
+
+    echo "Local repository and associated data have been removed."
+    log "Local repository data purged."
+fi
+
+exit 0
