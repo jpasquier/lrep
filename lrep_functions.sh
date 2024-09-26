@@ -40,9 +40,10 @@ update_local_repo() {
     echo "Updating local repository..."
 
     # Generate the Packages.gz file
-    dpkg-scanpackages "$LOCAL_REPO_DIR/pool/$COMPONENT" /dev/null | \
-        sudo tee "$LOCAL_REPO_DIR/dists/$DIST_NAME/$COMPONENT/binary-$ARCH/Packages" | \
-        gzip -9c | sudo tee "$LOCAL_REPO_DIR/dists/$DIST_NAME/$COMPONENT/binary-$ARCH/Packages.gz" >/dev/null
+    (cd "$LOCAL_REPO_DIR" && \
+        dpkg-scanpackages "pool/$COMPONENT" /dev/null | \
+        sudo tee "dists/$DIST_NAME/$COMPONENT/binary-$ARCH/Packages" | \
+        gzip -9c | sudo tee "dists/$DIST_NAME/$COMPONENT/binary-$ARCH/Packages.gz" >/dev/null)
 
     # Generate the Release file
     apt-ftparchive  \

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# build-lrep-package: script that builds a deb package of the lrep tool
+# build-lrep-deb: script that builds a deb package of the lrep tool
 
 set -e  # Exit immediately on error
 
@@ -24,7 +24,7 @@ git clone "https://github.com/$GIT_REPO" "$BUILD_DIR"
 # Generate version information
 cd "$BUILD_DIR"
 #VERSION=$(git describe --tags --always)
-VERSION="$(date +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)"
+VERSION=`git log --oneline | wc -l`-`git rev-parse --short HEAD`
 
 # Define destination directories
 PKG_DIR="$BUILD_DIR/pkg"

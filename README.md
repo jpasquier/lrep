@@ -77,7 +77,7 @@ You can install `lrep` using the provided Debian package.
 1. **Build the Package**
 
    ```bash
-   curl -L https://raw.githubusercontent.com/jpasquier/lrep/refs/heads/main/build-lrep-package | bash
+   curl -L https://raw.githubusercontent.com/jpasquier/lrep/refs/heads/main/build-lrep-deb | bash
    ```
 
    This will generate a `.deb` package in the current directory.
@@ -102,7 +102,7 @@ You can install `lrep` using the provided Debian package.
 
    ```bash
    cd lrep
-   ./build-lrep-package
+   ./build-lrep-deb
    ```
 
    This will generate a `.deb` package in the current directory.
