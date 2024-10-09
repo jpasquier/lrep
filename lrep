@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-# /usr/local/bin/lrep
+# /usr/bin/lrep
 # lrep: Manage a local Debian repository
 
 # Load functions
-source /usr/local/lib/lrep_functions.sh
+. /usr/lib/lrep/lrep_functions.sh
 
 # Ensure required commands are available
 check_requirements
@@ -25,22 +25,36 @@ case "$CMD" in
             echo "Error: No Debian package specified for addition."
             exit 1
         fi
-        DEB_FILE="$1"
-        add_to_local_repo "$DEB_FILE"
+        for DEB_FILE in "$@"; do
+            add_to_local_repo "$DEB_FILE"
+        done
+        # Update the local repository
+        update_local_repo
         ;;
     remove)
         if [ $# -lt 1 ]; then
             echo "Error: No Debian package specified for removal."
             exit 1
         fi
-        DEB_FILE="$1"
-        remove_from_local_repo "$DEB_FILE"
+        for DEB_FILE in "$@"; do
+            remove_from_local_repo "$DEB_FILE"
+        done
+        # Update the local repository
+        update_local_repo
         ;;
     list)
         list_local_repo
         ;;
     update)
         update_local_repo
+        ;;
+    export)
+        if [ $# -lt 1 ]; then
+            echo "Error: No output directory specified for export."
+            exit 1
+        fi
+        OUTPUT_DIR="$1"
+        export_local_repo "$OUTPUT_DIR"
         ;;
     help|-h|--help)
         display_help

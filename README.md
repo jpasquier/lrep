@@ -96,18 +96,22 @@ You can install `lrep` using the provided Debian package.
    git clone https://github.com/jpasquier/lrep.git
    ```
 
-2. **Build the Package**
+2. **Optional: Adapt the configuration file to your needs**
+
+   Modify `lrep.conf` to your needs.
+
+3. **Build the Package**
 
    Navigate to the cloned directory and run the build script:
 
    ```bash
    cd lrep
-   ./build-lrep-deb
+   ./build-lrep-deb --local
    ```
 
    This will generate a `.deb` package in the current directory.
 
-3. **Install the Package**
+4. **Install the Package**
 
    ```bash
    sudo dpkg -i lrep_<version>_all.deb
@@ -160,45 +164,50 @@ lrep <command> [arguments]
 
 **Available Commands:**
 
-- `add <deb_file>`: Add a `.deb` package to the local repository.
-- `remove <deb_file>`: Remove a package from the local repository.
+- `add <deb_files>...`: Add one or more `.deb` packages to the local repository.
+- `remove <deb_files>...`: Remove one or more packages from the local repository.
 - `list`: List all packages in the local repository.
 - `update`: Update the repository metadata.
+- `export <output_dir>`: Export all packages to the specified directory.
 - `help`: Display the help message.
+
+**Note:**
+
+In the default configuration, the commands `add`, `remove`, and `update` have to be run as root.
 
 ### Adding a Package
 
-To add a package to your local repository:
+To add one or more packages to your local repository:
 
 ```bash
-lrep add /path/to/package.deb
+lrep add package1.deb package2.deb
 ```
 
-**Example:**
+You can also use wildcards:
 
 ```bash
-lrep add ./my-custom-package_1.0.0_amd64.deb
+lrep add *.deb
 ```
 
-This command copies the specified `.deb` file to the repository, updates the
+This command copies the specified `.deb` files to the repository, updates the
 metadata, and signs the repository.
 
 ### Removing a Package
 
-To remove a package from your local repository:
+To remove one or more packages from your local repository:
 
 ```bash
-lrep remove package_name.deb
+lrep remove package1.deb package2.deb
 ```
 
-**Example:**
-
-```bash
-lrep remove my-custom-package_1.0.0_amd64.deb
-```
-
-This command removes the specified package from the repository and updates the
+This command removes the specified packages from the repository and updates the
 metadata.
+
+*Note:* To remove all packages from the repository, you can use:
+
+```bash
+lrep remove $(lrep list | awk '{print $1}' | grep '.deb')
+```
 
 ### Listing Packages
 
@@ -220,6 +229,16 @@ lrep update
 
 This is useful if you make changes to the repository directory outside of
 `lrep`.
+
+### Exporting Packages
+
+To export all packages from your local repository to a specific directory:
+
+```bash
+lrep export /path/to/output_dir
+```
+
+If the directory does not exist, you will be prompted to create it.
 
 ## Completion Scripts
 

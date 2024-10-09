@@ -1,2 +1,2 @@
-- [ ] Accept multiple arguments in `lrep add` and `lrep remove`
-- [ ] Fix `apt list` not completing with packages in local repository
+- [x] Accept multiple arguments in `lrep add` and `lrep remove`
+- [x] Fix `apt list` not completing with packages in local repository (seems to work finally)

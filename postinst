@@ -6,7 +6,7 @@ set -e  # Exit on error
 # Post-installation script for lrep
 
 # Load functions
-. /usr/local/lib/lrep_functions.sh
+. /usr/lib/lrep/lrep_functions.sh
 
 # Ensure required commands are available
 check_requirements
@@ -14,8 +14,8 @@ check_requirements
 # Create the local repository structure
 if [ ! -d "$LOCAL_REPO_DIR/dists/$DIST_NAME/$COMPONENT/binary-$ARCH" ]; then
     echo "Creating local repository directory."
-    sudo mkdir -p "$LOCAL_REPO_DIR/dists/$DIST_NAME/$COMPONENT/binary-$ARCH"
-    sudo mkdir -p "$LOCAL_REPO_DIR/pool/$COMPONENT"
+    mkdir -p "$LOCAL_REPO_DIR/dists/$DIST_NAME/$COMPONENT/binary-$ARCH"
+    mkdir -p "$LOCAL_REPO_DIR/pool/$COMPONENT"
     echo "Local repository directory created: $LOCAL_REPO_DIR"
 else
     echo "Local repository directory already exists: $LOCAL_REPO_DIR"
@@ -27,8 +27,8 @@ if [ ! -f "$PUBLIC_KEY_FILE" ]; then
     log "Generating GPG key."
 
     # Generate the GPG key in the private key directory
-    sudo mkdir -p "$PRIVATE_KEY_DIR"
-    sudo chmod 700 "$PRIVATE_KEY_DIR"
+    mkdir -p "$PRIVATE_KEY_DIR"
+    chmod 700 "$PRIVATE_KEY_DIR"
 
     TMP_DIR=$(mktemp -d)
     cat >"$TMP_DIR/gen-key-script" <<EOL
@@ -41,16 +41,16 @@ Expire-Date: 0
 %commit
 EOL
 
-    sudo gpg --homedir "$PRIVATE_KEY_DIR" --batch --gen-key "$TMP_DIR/gen-key-script"
+    gpg --homedir "$PRIVATE_KEY_DIR" --batch --gen-key "$TMP_DIR/gen-key-script"
 
     # Export the Public Key
-    sudo mkdir -p "$PUBLIC_KEY_DIR"
-    sudo gpg --homedir "$PRIVATE_KEY_DIR" --output "$PUBLIC_KEY_FILE" --export 'LocalRepositoryKey'
+    mkdir -p "$PUBLIC_KEY_DIR"
+    gpg --homedir "$PRIVATE_KEY_DIR" --output "$PUBLIC_KEY_FILE" --export 'LocalRepositoryKey'
 
     # Ensure the key file is readable:
-    sudo chmod a+r "$PUBLIC_KEY_FILE"
+    chmod a+r "$PUBLIC_KEY_FILE"
 
-    sudo rm -rf "$TMP_DIR"
+    rm -rf "$TMP_DIR"
 
     echo "GPG key generated and public key exported."
     log "GPG key generated."
@@ -62,7 +62,7 @@ fi
 if [ ! -f "$APT_SOURCES_LIST" ]; then
     echo "Creating APT sources list file."
     echo "deb [signed-by=$PUBLIC_KEY_FILE] file:$LOCAL_REPO_DIR $DIST_NAME $COMPONENT" | \
-        sudo tee "$APT_SOURCES_LIST" > /dev/null
+        tee "$APT_SOURCES_LIST" > /dev/null
     echo "APT sources list file created: $APT_SOURCES_LIST"
 else
     echo "APT sources list file already exists: $APT_SOURCES_LIST"
