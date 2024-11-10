@@ -11,6 +11,12 @@ set -e  # Exit on error
 # Ensure required commands are available
 check_requirements
 
+# Ensure that the log file exists and is writable
+if [ ! -f "$LOG_FILE" ]; then
+    touch "$LOG_FILE"
+    chmod 644 "$LOG_FILE"
+fi
+
 # Create the local repository structure
 if [ ! -d "$LOCAL_REPO_DIR/dists/$DIST_NAME/$COMPONENT/binary-$ARCH" ]; then
     echo "Creating local repository directory."
